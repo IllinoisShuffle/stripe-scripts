@@ -3,6 +3,7 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '3.1.1'
 
+gem 'csv'
 gem 'dotenv'
 gem 'json'
 gem 'stripe'
