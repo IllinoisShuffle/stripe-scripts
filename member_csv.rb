@@ -7,9 +7,9 @@ require 'active_support/core_ext/time'
 require 'MailchimpMarketing'
 
 Stripe.api_key = ENV['STRIPE_SECRET_KEY']
-subscriptions = Stripe::Subscription.list({status: 'all'})
+subscriptions = Stripe::Subscription.list({ status: 'all' })
 
-mailchimp = MailchimpMarketing::Client.new()
+mailchimp = MailchimpMarketing::Client.new
 mailchimp.set_config({
   api_key: ENV['MAILCHIMP_API_KEY'],
   server: ENV['MAILCHIMP_SERVER_PREFIX']
@@ -72,20 +72,18 @@ subscriptions.auto_paging_each do |s|
     mailing_list_status = 'subscribed'
   end
 
-  if mailing_list_status == 'subscribed'
-    # Update tag if missing
-    if s.status == 'active' && response['tags'].select { |t| t['name'] == 'Member' }.empty?
-      puts "Adding Member Tag for #{customer.email}"
+  # If member is subscribed but missing the Member tag
+  if mailing_list_status == 'subscribed' && s.status == 'active' && response['tags'].select { |t| t['name'] == 'Member' }.empty?
+    puts "Adding Member Tag for #{customer.email}"
 
-      mailchimp.lists.update_list_member_tags(ENV['MAILCHIMP_LIST_ID'], email_hash, {
-        tags: [
-          {
-            name: 'Member',
-            status: 'active'
-          }
-        ]
-      })
-    end
+    mailchimp.lists.update_list_member_tags(ENV['MAILCHIMP_LIST_ID'], email_hash, {
+      tags: [
+        {
+          name: 'Member',
+          status: 'active'
+        }
+      ]
+    })
   end
 
   # TODO: remove expired members from mailing list
@@ -106,9 +104,9 @@ end
 member_count = 0
 
 CSV.open('output/members.csv', 'wb') do |csv|
-  csv << ['#', 'Name', 'Email', 'City', 'State', 'Member Status', 'Member Since', 'Donations', 'Mailing List', 'Stripe ID']
+  csv << ['#','Name', 'Email', 'City', 'State', 'Member Status', 'Member Since', 'Donations', 'Mailing List', 'Stripe ID']
 
-  members.sort_by { |m| m[:subscription_start] }.each_with_index do |member, i|
+  members.sort_by { |m| m[:subscription_start] }.each do |member|
     member_count += 1 if member[:subscription_status] == 'active'
     csv << [
       member[:subscription_status] == 'active' ? member_count : '',
