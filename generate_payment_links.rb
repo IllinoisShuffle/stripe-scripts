@@ -55,14 +55,14 @@ donations.each do |amount, id|
   puts '  No League'
   output['no_league'][amount.to_s] = Stripe::PaymentLink.create(
     line_items: line_items,
-    shipping_address_collection: {allowed_countries: ['US']},
+    shipping_address_collection: { allowed_countries: ['US'] }
   ).url
 
   # Create Link with league
   puts '  League'
   output['league'][amount.to_s] = Stripe::PaymentLink.create(
     line_items: line_items + [{ price: league, quantity: 1 }],
-    shipping_address_collection: {allowed_countries: ['US']},
+    shipping_address_collection: { allowed_countries: ['US'] }
   ).url
 end
 
