@@ -3,27 +3,67 @@ require 'stripe'
 require 'dotenv/load'
 require 'date'
 require 'csv'
+require 'active_support/core_ext/time'
 
 Stripe.api_key = ENV['STRIPE_SECRET_KEY']
 
-subscriptions = Stripe::Subscription.list({limit: 100}) # TODO: pagination once we're over 100 members
+subscriptions = Stripe::Subscription.list({status: 'all'})
+
+members = []
+
+subscriptions.auto_paging_each do |s|
+  puts "Processing Subscription #{s.id}"
+
+  subscription_start = Time.at(s.start_date).in_time_zone('America/Chicago')
+  customer = Stripe::Customer.retrieve(s.customer)
+
+  city = if customer.address[:city].present?
+    customer.address[:city]
+  elsif customer.shipping[:address].present? && customer.shipping[:address][:city].present?
+    customer.shipping[:address][:city]
+  else
+    ''
+  end
+
+  state = if customer.address[:state].present?
+    customer.address[:state]
+  elsif customer.shipping[:address].present? && customer.shipping[:address][:state].present?
+    customer.shipping[:address][:state]
+  else
+    ''
+  end
+
+  additional_donations = Stripe::InvoiceItem.list({customer: customer}).data.select { |invoice_item| invoice_item.description == 'One-Time Donation' }.sum(&:amount) / 100.0
+
+  members.push({
+    name: customer.name,
+    email: customer.email,
+    city: city,
+    state: state,
+    subscription_status: s.status,
+    subscription_start: Time.at(s.start_date).in_time_zone('America/Chicago'),
+    additional_donations: additional_donations.positive? ? "$#{additional_donations}" : '',
+    subscription_id: s.id
+  })
+end
+
+member_count = 0
 
 CSV.open('output/members.csv', 'wb') do |csv|
-  csv << ['#', 'Member Since', 'Name', 'Email', 'Additional Donation', 'Spring Singles League']
+  csv << ['#', 'Name', 'Email', 'City', 'State', 'Status', 'Member Since', 'Donations', 'Stripe ID']
 
-  subscriptions.sort_by(&:start_date).each_with_index do |s, i|
-    subscription_start = Time.at(s.start_date).to_datetime # TODO: specify timezone
-    customer = Stripe::Customer.retrieve(s.customer)
-    additional_donation = Stripe::InvoiceItem.list({customer: customer}).data.select { |invoice_item| invoice_item.description == 'One-Time Donation' }.sum(&:amount)
-    singles_league = Stripe::InvoiceItem.list({customer: customer}).data.select { |invoice_item| invoice_item.description == 'Singles League - Spring 2022' }.any?
-
+  members.sort_by { |m| m[:subscription_start] }.each_with_index do |member, i|
+    member_count += 1 if member[:subscription_status] == 'active'
     csv << [
-      i + 1,
-      subscription_start.strftime('%Y-%m-%d'),
-      customer.name,
-      customer.email,
-      '%.2f' % (additional_donation.to_f / 100),
-      singles_league
+      member[:subscription_status] == 'active' ? member_count : '',
+      member[:name],
+      member[:email],
+      member[:city],
+      member[:state],
+      member[:subscription_status],
+      member[:subscription_start],
+      member[:additional_donations],
+      member[:subscription_id]
     ]
   end
 end
