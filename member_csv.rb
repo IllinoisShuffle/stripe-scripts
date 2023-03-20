@@ -17,8 +17,24 @@ mailchimp.set_config({
 
 members = []
 
+# Ignore these for various reasons, including testing in production
+# TODO: make this configurable
+ignore_subscriptions = [
+  'sub_1LBOHNG9vhwQIFDDfUpz7HSM',
+  'sub_1LBOOAG9vhwQIFDDy9msWx4R',
+  'sub_1LBOHNG9vhwQIFDDfUpz7HSM',
+  'sub_1KbZHMG9vhwQIFDD9sXK0tIi',
+  'sub_1KcC9OG9vhwQIFDDHkGiH3S7',
+  'sub_1LcZIUG9vhwQIFDDkmzqx39N'
+]
+
 subscriptions.auto_paging_each do |s|
   puts "Processing Subscription #{s.id}"
+
+  if ignore_subscriptions.include?(s.id)
+    puts "Ignoring Subscription #{s.id}"
+    next
+  end
 
   subscription_start = Time.at(s.start_date).in_time_zone('America/Chicago')
   customer = Stripe::Customer.retrieve(s.customer)
