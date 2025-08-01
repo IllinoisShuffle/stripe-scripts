@@ -58,3 +58,4 @@ build-iPhoneSimulator/
 .DS_Store
 .env
 output/
+.google_credentials.json
