@@ -60,13 +60,13 @@ Configure repository secrets at **Settings > Secrets and variables > Actions**:
 | `MAILCHIMP_LIST_ID` | Mailchimp list/audience ID |
 | `GOOGLE_CREDENTIALS` | Entire contents of `.google_credentials.json` |
 
-The workflow runs automatically every Monday at 8am Central, or can be triggered manually from the Actions tab.
+The workflow runs automatically daily at 8am Central, or can be triggered manually from the Actions tab.
 
 ## Usage
 
 ### Member CSV & Sync
 
-**Automated (Recommended):** Runs automatically every Monday at 8am Central via GitHub Actions.
+**Automated (Recommended):** Runs automatically daily at 8am Central via GitHub Actions.
 
 - **Manual trigger:** Go to [Actions](https://github.com/IllinoisShuffle/stripe-scripts/actions) > "Sync ILSA Members" > "Run workflow"
 - **View results:** Check workflow run for logs; CSV artifact available for download (7-day retention)

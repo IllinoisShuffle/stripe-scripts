@@ -2,7 +2,7 @@ name: Sync ILSA Members
 
 on:
   schedule:
-    - cron: '0 14 * * 1'  # Weekly Monday 8am Central (UTC-6)
+    - cron: '0 14 * * *'  # Daily 8am Central (UTC-6)
   workflow_dispatch:        # Manual trigger button
 
 jobs:
